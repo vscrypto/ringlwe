@@ -8,8 +8,8 @@
  * See LICENSE for complete information.
  */
  	
-#ifndef _FFT_1024_17633281_H
-#define	_FFT_1024_17633281_H
+#ifndef _FFT_1024_8816641_H
+#define	_FFT_1024_8816641_H
 #include <inttypes.h>	
 #include <stdlib.h>	
 #include <string.h>	
@@ -28,17 +28,17 @@ We use Gentleman-Sande, decimation-in-frequency FFT, for the forward FFT.
 Note that we will not perform the usual scambling / bit-reversal procedure here because we will invert 
 the fourier transform using decimation-in-time.
 */
-void FFT_forward_1024_17633281(FFTSHORT x[1024]);
+void FFT_forward_1024_8816641(FFTSHORT x[1024]);
 
 /*
 We use Cooley-Tukey, decimation-in-time FFT, for the inverse FFT.
 Note that we will not perform the usual scambling / bit-reversal procedure here because we will the forward
 fourier transform is using decimation-in-frequency.
 */
-void FFT_backward_1024_17633281(FFTSHORT x[1024]);
+void FFT_backward_1024_8816641(FFTSHORT x[1024]);
 
 /*O(nlogn) cyclic convolution*/
-void cyclic_convolution_1024_17633281(FFTSHORT z[1024], FFTSHORT x[1024], FFTSHORT y[1024]);
+void cyclic_convolution_1024_8816641(FFTSHORT z[1024], FFTSHORT x[1024], FFTSHORT y[1024]);
 	
 
 #endif
