@@ -19,11 +19,11 @@ We recommend the uniform sampling variants because they run significantly faster
 There are two versions of gaussian sampling, both of which produce samples from the same distribution. One is the faster of the two but has a slight correlation of computation time to sampled value, whereas the other (gaussian_ct) takes constant time so has no such correlation. The uniform sampling does not have a correlation of computation time to sample value so just requires one version.
 
 For each algorithm variant, we provide:
-* an example key exchange program in rlwe_main.c, which compiles to rlwe_<m>_<q>_<sampling>
-* a benchmarking program in rlwe_benchmark.c, which compiles to benchmark_<m>_<q>_<sampling>
-* a check of test vectors in rlwe_testvec.c, which compiles to testvec_<m>_<q>_<sampling>
+* an example key exchange program in rlwe_main.c, which compiles to rlwe_*m*_*q*_*sampling*
+* a benchmarking program in rlwe_benchmark.c, which compiles to benchmark_*m*_*q*_*sampling*
+* a check of test vectors in rlwe_testvec.c, which compiles to testvec_*m*_*q*_*sampling*
 
-| Algorithm (rlwe_<m>_<q>) | Security   |    Public key size |
+| Algorithm (rlwe_*m*_*q*) | Security   |    Public key size |
 | ------------------------ | ---------- | ------------------ |
 | rlwe_256_15361           |  80 bits   |    3584 bits       |
 | rlwe_512_25601           | 128 bits   |    7680 bits       |
