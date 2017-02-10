@@ -29,8 +29,8 @@ For each algorithm variant, we provide:
 
 | Algorithm (rlwe_*m*_*q*) | Reconciliation | Security   |    Public key size |
 | ------------------------ | -------------- | ---------- | ------------------ |
-| rlwe_512_12289           | NewHope-style  | 128+ bits  |    3584 bits       |
-| rlwe_1024_12289          | NewHope-style  | 256+ bits  |    7168 bits       |
+| rlwe_512_12289           | NewHope-style  | 128+ bits  |    7168 bits       |
+| rlwe_1024_12289          | NewHope-style  | 256+ bits  |   14336 bits       |
 | rlwe_256_15361           | Peikert-style  |  80 bits   |    3584 bits       |
 | rlwe_512_25601           | Peikert-style  | 128 bits   |    7680 bits       |
 | rlwe_1024_40961          | Peikert-style  | 256 bits   |   16384 bits       |
