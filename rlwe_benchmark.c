@@ -13,7 +13,7 @@
 #include <sys/time.h>
 #include "rlwe_kex.h"
 
-#define ITERATIONS 100000
+#define ITERATIONS 10000
 
 
 #if defined(__i386__)
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 	/*Information that gets shared by Alice and Bob*/
 	RINGELT b_alice[m]; /* Alice's Public Key */
 	RINGELT u[m]; /* Bob's Ring Element from Encapsulation */
-	uint64_t cr_v[muwords]; /* Cross Rounding of v */
+	uint64_t cr_v[recwords]; /* Cross Rounding of v */
 
 	printf("Benchmarking : m = %"PRIuRINGELT", q = %"PRIuRINGELT"\n", m, q);
 	
@@ -89,6 +89,9 @@ int main(int argc, char *argv[])
 #ifdef GAUSSIAN_CT
 	printf("Gaussian Constant Time sampling \n");
 #endif
+#ifdef BINOMIAL
+	printf("Binomial sampling\n");
+#endif
 	printf("%-30s %15s %15s %15s\n", "Operation", "Iterations", "usec (avg)", "cycles (avg)");
 	printf("------------------------------------------------------------------------------\n");
 #if defined UNIFORM
@@ -97,6 +100,8 @@ int main(int argc, char *argv[])
 	TIME_OPERATION(sample_secret(s_alice), "Sample Gaussian", ITERATIONS / 50);
 #elif defined GAUSSIAN_CT
 	TIME_OPERATION(sample_secret(s_alice), "Sample Gaussian Constant Time", ITERATIONS / 50);	
+#elif defined BINOMIAL
+	TIME_OPERATION(sample_secret(s_alice), "Sample Binomial", ITERATIONS / 50);	
 #endif
 
 	TIME_OPERATION(FFT_forward(s_alice), "FFT Forward", ITERATIONS / 50);
@@ -106,10 +111,10 @@ int main(int argc, char *argv[])
 
 	KEM1_Generate(s_alice, b_alice);
 
-	TIME_OPERATION(round_and_cross_round(mu_alice, cr_v, u), "Round And Cross Round", ITERATIONS / 10);
-
+	TIME_OPERATION(help_rec(mu_alice, cr_v, u), "HelpRec and Rec", ITERATIONS);
+	
 	TIME_OPERATION(rec(mu_bob, u, cr_v), "Rec", ITERATIONS);
-
+	
 	TIME_OPERATION(KEM1_Generate(s_alice, b_alice), "KEM1.Generate", ITERATIONS / 50);
 
 	TIME_OPERATION(KEM1_Encapsulate(u, cr_v, mu_bob, b_alice), "KEM1.Encapsulate", ITERATIONS / 50);

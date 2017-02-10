@@ -30,8 +30,8 @@
 
 #ifdef UNIFORM
 
-#if defined GAUSSIAN || defined GAUSSIAN_CT
-	#error "Must compile with one of -DGAUSSIAN, -DGAUSSIAN_CT, or -DUINIFORM"
+#if defined GAUSSIAN || defined GAUSSIAN_CT || defined BINOMIAL
+	#error "Must compile with one of -DGAUSSIAN, -DGAUSSIAN_CT, -DUNIFORM, or -DBINOMIAL"
 #endif
 
 
@@ -74,8 +74,8 @@ void sample_secret(RINGELT s[m]) {
 
 #if defined GAUSSIAN || defined GAUSSIAN_CT
 
-#if defined UNIFORM
-	#error "Must compile with one of -DGAUSSIAN, -DGAUSSIAN_CT, or -DUINIFORM"
+#if defined UNIFORM || defined BINOMIAL
+	#error "Must compile with one of -DGAUSSIAN, -DGAUSSIAN_CT, -DUNIFORM, or -DBINOMIAL"
 #endif
 
 
@@ -113,7 +113,7 @@ static uint64_t ct_ne_u64(uint64_t x, uint64_t y) {
  */
 #ifdef GAUSSIAN_CT
 static uint64_t ct_eq_u64(uint64_t x, uint64_t y) {
-    return 1 ^ ct_ne_u64(x, y);
+	return 1 ^ ct_ne_u64(x, y);
 }
 #endif
 /* Returns 1 if x < y
@@ -121,7 +121,7 @@ static uint64_t ct_eq_u64(uint64_t x, uint64_t y) {
  * x and y are arbitrary unsigned 64-bit integers
  */
 static uint64_t ct_lt_u64(uint64_t x, uint64_t y) {
-    return (x^((x^y)|((x-y)^y))) >> 63;
+	return (x^((x^y)|((x-y)^y))) >> 63;
 }
 
 
@@ -130,7 +130,7 @@ static uint64_t ct_lt_u64(uint64_t x, uint64_t y) {
  */
 static uint64_t ct_mask_u64(uint64_t bit)
 {
-    return 0 - (uint64_t)ct_isnonzero_u64(bit);
+	return 0 - (uint64_t)ct_isnonzero_u64(bit);
 }
 
 /* Conditionally return x or y depending on whether bit is set
@@ -140,8 +140,8 @@ static uint64_t ct_mask_u64(uint64_t bit)
  */
 #ifdef GAUSSIAN_CT
 static uint64_t ct_select_u64(uint64_t x, uint64_t y, uint64_t bit) {
-    uint64_t _m = ct_mask_u64(bit);
-    return (x&_m) | (y&~_m);
+	uint64_t _m = ct_mask_u64(bit);
+	return (x&_m) | (y&~_m);
 }
 #endif
 /* Returns 0 if a >= b
@@ -247,8 +247,242 @@ void sample_secret(RINGELT s[m]) {
 #endif //GAUSSIAN
 
 
-/* Round and cross-round */
-void round_and_cross_round(uint64_t modular_rnd[muwords], uint64_t cross_rnd[muwords], const RINGELT v[m]) {
+#ifdef BINOMIAL
+#if defined UNIFORM || defined GAUSSIAN
+	#error "Must compile with one of -DGAUSSIAN, -DGAUSSIAN_CT, -DUNIFORM, or -DBINOMIAL"
+#endif
+
+/*Set the m'th coefficient to be 0 in the prime case*/
+void sample_secret(RINGELT s[m]) {
+	RANDOM_VARS
+	int ind = 0, j, v;
+	uint64_t r, b = 0;
+	int bit0, bit1;
+	ind = 0;
+	r = RANDOM64;
+#if MISPOWEROFTWO
+	while (ind < m) {
+#else
+	while (ind < m-1) {
+#endif	
+		v = 0;
+		for (j = 0; j < BINOMK; ++j) {
+			if (b == 64) {
+				b = 0; r = RANDOM64;
+			}
+			bit0 = (r & 1);
+			r >>= 1;
+			bit1 = (r & 1);
+			r >>= 1;
+			b += 2;
+			v += (bit1 - bit0);
+		}	
+		if (v >= 0) s[ind] = (RINGELT) v;
+		else {
+			s[ind] = (RINGELT) (q + v);
+		}		
+		ind++;		
+	}
+#if !MISPOWEROFTWO
+	s[m-1] = 0;
+#endif
+}
+
+#endif //BINOMIAL
+
+
+#ifdef NHRECONCILE
+
+/* Newhope-style reconciliation. Returns keybit of x given the subcell.
+   Entries of x are coefficients in range [0,q-1] */
+int nh_keycell(RINGELT x[rdim], uint16_t subcell[rdim]){
+	const uint16_t rmaskplus = (1<<(rsize+1))-1;
+	uint32_t Br[rdim], dist = 0;
+	int j;
+	int keybit=0;
+
+	// work mod q*2*2**rsize (8q)
+	// subcell is mod 2**rsize (4), so scale up by 2 for now
+	for(j=0;j<rdim-1;j++)
+		Br[j] = ( (subcell[j]<<1) + subcell[rdim-1]  ) & rmaskplus;
+	Br[rdim-1] = subcell[rdim-1];
+
+	for(j=0;j<rdim;j++){
+	        uint32_t quo, diff;
+		uint32_t xx=x[j]; // must hold up to q*(2+1)*2**rsize
+		// xx is mod q, scale up to mod q*2*2**rsize
+		xx <<= rsize + 1;
+		// subtract helper
+		xx +=  q * ( ( 1 << (rsize+1) ) - Br[j] );
+		// find difference to nearest multiple of q*2*2**rsize (8q)
+
+		/* ********************************** */
+		/* function of xx in range [0,(q<<(rsize+1))-1], output is diff in range [0,(q<<rsize)-1] */
+		quo = ( xx + (q<<rsize) ) / (q<<(rsize+1));
+		diff = ( xx > (quo*(q<<(rsize+1))) ) ? ( xx - (quo*(q<<(rsize+1))) ) : ( (quo*(q<<(rsize+1))) - xx ); // scaled by 8q to range [0,4q]
+       
+		dist += diff;
+
+        }
+
+	// dist is scaled by rdim*q*2**rsize/2 (8q)
+	if(dist > (rdim*(q<<(rsize-1))) ){ // key bit 1
+	        keybit = 1;
+        } 
+
+	return keybit;
+}
+
+/* Newhope-style reconciliation. Reconcile v using helprec data. */
+void rec(uint64_t key[muwords], const RINGELT v[m], const uint64_t helprec[recwords]) {
+	int i = 0;
+	const uint16_t rmask = (1<<rsize)-1;
+	int word = 0, pos = 0;
+
+	memset((void *) key, 0, muwords*sizeof(uint64_t));
+  
+	for(i=0;i<muwords*64;i++) {
+	        // extract helprec vector
+	        RINGELT x[rdim];
+		int j;
+		uint16_t subcell[rdim];
+		int keybit;
+
+		// extract rdim coeffs
+		for(j=0;j<rdim;j++)
+			x[j]=v[i+j*muwords*64];
+
+		// unpack subcell from helprec
+		for(j=0;j<rdim;j++) {
+	                subcell[j] = ( helprec[word] >> pos ) & rmask;
+			pos += rsize;
+			if ( pos > 64){
+	                        word++; pos -=64;
+				subcell[j] |= ( helprec[word] << ( rsize - pos ) ) & rmask;
+                        }
+			if(pos == 64) {
+	                        word++; pos = 0;
+                        }
+                 }
+	  
+		keybit = nh_keycell(x, subcell);
+
+		key[ i >> 6 ] |= ((uint64_t)keybit) << ( i & 0x3f );
+
+	}
+}
+
+
+/* Newhope-style reconciliation. Computes subcell of x and returns its keybit.
+   Entries of x are coefficients that have been doubled and edge-blurred, they are in range [0,2q-1]
+   Entries of subcell are computed in range [0,2**rsize-1] */
+int nh_subcell(uint16_t subcell[rdim], RINGELT x[rdim]){
+	const uint16_t rmask = (1<<rsize)-1;
+	uint16_t v0[rdim], v1[rdim];
+	uint32_t dist = 0;
+	int j;
+	int keybit;
+	
+	for(j=0;j<rdim;j++){
+		uint32_t quo, diff;
+		uint32_t xx=x[j];
+		// CVP: work mod q*2*2**rsize
+
+		/* ******************************************* */
+		/* function of xx, output (diff,v0[j],v1[j]) */
+		xx <<= rsize;
+		// xx is in range [0,(2q-1)*2**rsize], take mod difference to nearest multiple of 2q
+		// and output this if 1-norm is less than 1, otherwise output nearest multiple at offset q
+		// so for rsize=2: range is [0,8q-4]
+		quo = xx / q; // divides into eigths (2*2**rsize)
+		v0[j] = (quo+1)>>1; // [0,4] ([0,2**rsize]) remember to mod 4 (2**rsize) later
+		diff = ( xx > v0[j]*(q<<1) ) ? ( xx - v0[j]*(q<<1) ) : ( v0[j]*(q<<1) - xx ); // scaled by 2q to range [0,q]
+		v0[j] &= rmask; // [0,3]
+		v1[j] = quo>>1; // [0,3]
+		v1[j] &= rmask; // [0,3]
+		/* ******************************************* */
+	  
+		dist += diff;
+	}
+
+	// dist is scaled by rdim*q/2
+	if(dist < ( (rdim*q+1) >> 1 ) ){ // v0 closest
+		for(j=0;j<rdim-1;j++)
+			subcell[j] = ( v0[j] - v0[rdim-1] ) & rmask;
+		keybit = v0[rdim-1] >> ( rsize - 1 );
+		subcell[rdim-1] = ( v0[rdim-1] << 1 ) & rmask;
+	}
+	else{ // v1 closest
+		for(j=0;j<rdim-1;j++)
+			subcell[j] = ( v1[j] - v1[rdim-1] ) & rmask;
+		keybit = v1[rdim-1] >> ( rsize - 1 );
+		subcell[rdim-1] = ( 1 + ( v1[rdim-1] << 1 ) ) & rmask;
+	}
+	  
+	return keybit;
+}
+
+/* Newhope-style reconciliation. Computer helprec data and key for v */
+void help_rec(uint64_t key[muwords], uint64_t helprec[recwords], const RINGELT v[m]) {
+	RANDOM_VARS;
+	int i = 0;
+	uint64_t rnd = RANDOM64;
+	int word = 0, pos = 0, rbit = 0;
+
+	memset((void *) key, 0, muwords*sizeof(uint64_t));
+	memset((void *) helprec, 0, recwords*sizeof(uint64_t));
+
+	for(i=0;i<muwords*64;i++){
+		RINGELT x[rdim];
+		int j;
+		uint16_t subcell[rdim];
+		int keybit;
+
+		// extract rdim coeffs
+		for(j=0;j<rdim;j++)
+			x[j]=v[i+j*muwords*64];
+
+		for(j=0;j<rdim;j++){
+			// double
+			x[j] <<= 1;
+		}
+		// add 1 w.p. 1/2
+		if (rnd & 1) {
+			for(j=0;j<rdim;j++) {
+				x[j] += 1;
+			}
+		}
+		rbit++;
+		if (rbit >= 64) {
+			rnd = RANDOM64; rbit = 0;
+		}
+		else rnd = (rnd >> 1);
+	  
+		keybit = nh_subcell(subcell,x);
+
+		// pack subcell into helprec
+		for(j=0;j<rdim;j++) {
+			helprec[word] |=  ( (uint64_t) subcell[j] ) << pos;
+			pos += rsize;
+			if ( pos > 64){
+				word++; pos -=64;
+				helprec[word] |= subcell[j] >> ( rsize - pos );
+			}
+			if(pos == 64) {
+				word++; pos = 0;
+			}
+		}
+
+		// pack keybit into key
+		key[ i >> 6 ] |= ((uint64_t)keybit) << ( i & 0x3f );
+
+	}	    
+}
+
+#else // NHRECONCILE
+
+/* Peikert-style Round and cross-round */
+void help_rec(uint64_t modular_rnd[muwords], uint64_t cross_rnd[recwords], const RINGELT v[m]) {
 	RANDOM_VARS;
 	uint16_t i = 0;
 	uint64_t r = RANDOM64;
@@ -318,8 +552,8 @@ void round_and_cross_round(uint64_t modular_rnd[muwords], uint64_t cross_rnd[muw
 }
 
 
-/* Reconcile */ 
-void rec(uint64_t r[muwords], RINGELT w[m], uint64_t b[muwords]) {
+/* Peikert-style Reconcile */ 
+void rec(uint64_t r[muwords], const RINGELT w[m], const uint64_t b[recwords]) {
 	RINGELT i = 0;
 	RINGELT word = 0, pos = 0;
 
@@ -343,6 +577,8 @@ void rec(uint64_t r[muwords], RINGELT w[m], uint64_t b[muwords]) {
 	}
 }
 
+#endif // NHRECONCILE
+
 /* Construct Alice's private / public key pair. Return all elements in the Fourier Domain
  * input:  none
  * output: private key s_1=s[n]...s[2*n-1] in Fourier Domain
@@ -364,7 +600,7 @@ void KEM1_Generate(RINGELT s[2*m], RINGELT b[m]) {
  *         reconciliation data cr_v
  *         shared secret mu
  */
-void KEM1_Encapsulate(RINGELT u[m], uint64_t cr_v[muwords], uint64_t mu[muwords], RINGELT b[m]) {
+void KEM1_Encapsulate(RINGELT u[m], uint64_t cr_v[recwords], uint64_t mu[muwords], RINGELT b[m]) {
 	RINGELT e[3*m];
 	RINGELT v[m];
 
@@ -380,7 +616,8 @@ void KEM1_Encapsulate(RINGELT u[m], uint64_t cr_v[muwords], uint64_t mu[muwords]
 	
 	POINTWISE_ADD(v, v, e+2*m); //Create v = e0*b+e2
 	
-	round_and_cross_round(mu, cr_v, v);
+	help_rec(mu, cr_v, v);
+	  
 }
 
 /* Decapsulation routine.
@@ -389,12 +626,13 @@ void KEM1_Encapsulate(RINGELT u[m], uint64_t cr_v[muwords], uint64_t mu[muwords]
  *         reconciliation data cr_v
  * output: shared secret mu
  */
-void KEM1_Decapsulate(uint64_t mu[muwords], RINGELT u[m], RINGELT s_1[m], uint64_t cr_v[muwords]) {
+void KEM1_Decapsulate(uint64_t mu[muwords], RINGELT u[m], RINGELT s_1[m], uint64_t cr_v[recwords]) {
 	RINGELT w[m];
 
 	POINTWISE_MUL(w, s_1, u); //Create w = s1*u
 	FFT_backward(w); //Undo the Fourier Transform
 	MAPTOCYCLOTOMIC(w);
+
 	rec(mu, w, cr_v);
 
 }

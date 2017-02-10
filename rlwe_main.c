@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 	/*Information that gets shared by Alice and Bob*/
 	RINGELT b_alice[m]; /* Alice's Public Key */
 	RINGELT u[m]; /* Bob's Ring Element from Encapsulation */
-	uint64_t cr_v[muwords]; /* Cross Rounding of v */
+	uint64_t cr_v[recwords]; /* Cross Rounding of v */
 
 	KEM1_Generate(s_alice, b_alice);
 
@@ -58,13 +58,13 @@ int main(int argc, char *argv[])
 
 	printf("Alice's version of mu\n");
 	for (i = 0; i < muwords; ++i) {
-		printf("%lu ", mu_alice[i]);
+		printf("%lx ", mu_alice[i]);
 	}
 	printf("\n\n");
 
 	printf("Bob's version of mu\n");
 	for (i = 0; i < muwords; ++i) {
-		printf("%lu ", mu_bob[i]);
+		printf("%lx ", mu_bob[i]);
 	}
 
 	printf("\n\n");
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 		memset(u, 0, m*sizeof(RINGELT));
 		memset(mu_alice, 0, muwords*sizeof(uint64_t));
 		memset(mu_bob, 0, muwords*sizeof(uint64_t));
-		memset(cr_v, 0, muwords*sizeof(uint64_t));
+		memset(cr_v, 0, recwords*sizeof(uint64_t));
 
 		KEM1_Generate(s_alice, b_alice);
 		KEM1_Encapsulate(u, cr_v, mu_bob, b_alice);

@@ -18,6 +18,72 @@
 #include <string.h>
 
 
+#if defined M512 && defined Q12289
+	#include "FFT_512_12289.d/FFT_512_12289.h"
+	#define RINGELT FFTSHORT
+	#define PRIuRINGELT PRIuFFTSHORT
+	#include "rlwe_params_512_12289.h"
+	
+	/*Use the twisted Fourier Transform in the Power of 2 case for multiplication
+	in the ring F_q[x] / <x^m+1>*/
+	
+	#define FFT_forward FFT_twisted_forward_512_12289
+	#define FFT_backward(_x)\
+	do {\
+		FFT_twisted_backward_512_12289(_x);\
+		for (uint16_t _i = 0; _i < m; ++_i) {\
+			MUL_MOD((_x)[_i], (_x)[_i], 12265, (q));\
+		}\
+	} while(0)
+			
+	#define HAVEVALIDMQ 1
+	#define MISPOWEROFTWO 1
+#endif
+
+#if defined M1024 && defined Q12289
+	#include "FFT_1024_12289.d/FFT_1024_12289.h"
+	#define RINGELT FFTSHORT
+	#define PRIuRINGELT PRIuFFTSHORT
+	#include "rlwe_params_1024_12289.h"
+	
+	/*Use the twisted Fourier Transform in the Power of 2 case for multiplication
+	in the ring F_q[x] / <x^m+1>*/
+	
+	#define FFT_forward FFT_twisted_forward_1024_12289
+	#define FFT_backward(_x)\
+	do {\
+		FFT_twisted_backward_1024_12289(_x);\
+		for (uint16_t _i = 0; _i < m; ++_i) {\
+			MUL_MOD((_x)[_i], (_x)[_i], 12277, (q));\
+		}\
+	} while(0)
+			
+	#define HAVEVALIDMQ 1
+	#define MISPOWEROFTWO 1
+#endif
+
+#if defined M256 && defined Q15361
+	#include "FFT_256_15361.d/FFT_256_15361.h"
+	#define RINGELT FFTSHORT
+	#define PRIuRINGELT PRIuFFTSHORT
+	#include "rlwe_params_256_15361.h"
+	
+	/*Use the twisted Fourier Transform in the Power of 2 case for multiplication
+	in the ring F_q[x] / <x^m+1>*/
+	
+	#define FFT_forward FFT_twisted_forward_256_15361
+	#define FFT_backward(_x)\
+	do {\
+		FFT_twisted_backward_256_15361(_x);\
+		for (uint16_t _i = 0; _i < m; ++_i) {\
+			MUL_MOD((_x)[_i], (_x)[_i], 15301, (q));\
+		}\
+	} while(0)
+			
+	#define HAVEVALIDMQ 1
+	#define MISPOWEROFTWO 1
+#endif
+
 #if defined M337 && defined Q32353
 	#include "FFT_337_32353.d/FFT_337_32353.h"
 	#define RINGELT FFTSHORT
@@ -54,6 +120,28 @@
 			
 	#define HAVEVALIDMQ 1
 	#define MISPOWEROFTWO 0
+#endif
+
+#if defined M512 && defined Q25601
+	#include "FFT_512_25601.d/FFT_512_25601.h"
+	#define RINGELT FFTSHORT
+	#define PRIuRINGELT PRIuFFTSHORT
+	#include "rlwe_params_512_25601.h"
+	
+	/*Use the twisted Fourier Transform in the Power of 2 case for multiplication
+	in the ring F_q[x] / <x^m+1>*/
+	
+	#define FFT_forward FFT_twisted_forward_512_25601
+	#define FFT_backward(_x)\
+	do {\
+		FFT_twisted_backward_512_25601(_x);\
+		for (uint16_t _i = 0; _i < m; ++_i) {\
+			MUL_MOD((_x)[_i], (_x)[_i], 25551, (q));\
+		}\
+	} while(0)
+			
+	#define HAVEVALIDMQ 1
+	#define MISPOWEROFTWO 1
 #endif
 
 #if defined M541 && defined Q41117
@@ -132,50 +220,6 @@
 	#define MISPOWEROFTWO 0
 #endif
 
-#if defined M256 && defined Q15361
-	#include "FFT_256_15361.d/FFT_256_15361.h"
-	#define RINGELT FFTSHORT
-	#define PRIuRINGELT PRIuFFTSHORT
-	#include "rlwe_params_256_15361.h"
-	
-	/*Use the twisted Fourier Transform in the Power of 2 case for multiplication
-	in the ring F_q[x] / <x^m+1>*/
-	
-	#define FFT_forward FFT_twisted_forward_256_15361
-	#define FFT_backward(_x)\
-	do {\
-		FFT_twisted_backward_256_15361(_x);\
-		for (uint16_t _i = 0; _i < m; ++_i) {\
-			MUL_MOD((_x)[_i], (_x)[_i], 15301, (q));\
-		}\
-	} while(0)
-			
-	#define HAVEVALIDMQ 1
-	#define MISPOWEROFTWO 1
-#endif
-
-#if defined M512 && defined Q25601
-	#include "FFT_512_25601.d/FFT_512_25601.h"
-	#define RINGELT FFTSHORT
-	#define PRIuRINGELT PRIuFFTSHORT
-	#include "rlwe_params_512_25601.h"
-	
-	/*Use the twisted Fourier Transform in the Power of 2 case for multiplication
-	in the ring F_q[x] / <x^m+1>*/
-	
-	#define FFT_forward FFT_twisted_forward_512_25601
-	#define FFT_backward(_x)\
-	do {\
-		FFT_twisted_backward_512_25601(_x);\
-		for (uint16_t _i = 0; _i < m; ++_i) {\
-			MUL_MOD((_x)[_i], (_x)[_i], 25551, (q));\
-		}\
-	} while(0)
-			
-	#define HAVEVALIDMQ 1
-	#define MISPOWEROFTWO 1
-#endif
-
 #if defined M1024 && defined Q40961
 	#include "FFT_1024_40961.d/FFT_1024_40961.h"
 	#define RINGELT FFTSHORT
@@ -199,7 +243,7 @@
 #endif
 
 #ifndef HAVEVALIDMQ
-	#error "Not compiling with a valid values of m and q"
+	#error "Not compiling with valid values of m and q"
 #endif
 
 

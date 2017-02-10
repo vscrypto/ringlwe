@@ -7,20 +7,29 @@
  *
  * See LICENSE for complete information.
  */
-	
 #include <inttypes.h>
 #include "rlwe_params_1024_40961.h"
 
-const RINGELT m = 1024, muwords = 16; /* key (mu) is m bits */
+const RINGELT m = 1024;
 
-const RINGELT q = 40961, qmod4 = 1;
+const RINGELT q = 40961;
+	
+const RINGELT muwords = 16; /* key (mu) is m bits */
+const RINGELT recwords = 16; /* reconciliation vector is m bits */
 
+#ifdef UNIFORM
 const RINGELT B = 5, BB = 11, LOG2B = 4, BMASK = 0xf;
 
 const RINGELT small_coeff_table[11] = {40956, 40957, 40958, 40959, 40960, 0, 1, 2, 3, 4, 5};
+#endif
 
+#ifdef NHRECONCILE
+        #error "Compiling without NH reconcile parameters"
+#else
+const RINGELT qmod4 = 1;
 const RINGELT q_1_4 = 10240, q_2_4 = 20480, q_3_4 = 30721;
-const RINGELT r0_l = 15360, r0_u = 35841, r1_l = 5119, r1_u = 25601;	
+const RINGELT r0_l = 15360, r0_u = 35841, r1_l = 5119, r1_u = 25601;
+#endif
 
 
 /* Public Parameter a. Each a parameter rejection sampled from non-overlapping

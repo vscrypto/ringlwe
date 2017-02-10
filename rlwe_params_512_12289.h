@@ -25,10 +25,8 @@ EXTERN const RINGELT q;
 
 EXTERN const RINGELT muwords, recwords;
 
-#ifdef UNIFORM
-EXTERN const RINGELT B, BB, LOG2B, BMASK;
-/*[-B..B] modulo q*/
-EXTERN const RINGELT small_coeff_table[11];
+#ifdef BINOMIAL
+EXTERN const RINGELT BINOMK;
 #endif
 
 #ifdef NHRECONCILE
@@ -42,6 +40,6 @@ EXTERN const RINGELT r0_u, r0_l, r1_u, r1_l;
 #endif
 
 /*Public parameter a. Note that this is held in the FFT / CRT basis.*/
-EXTERN const RINGELT a[739];
+EXTERN const RINGELT a[512];
 
 #endif //_PARAMS_H

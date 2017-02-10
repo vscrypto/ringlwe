@@ -24,7 +24,7 @@ void KEM1_Generate(RINGELT s[2*m], RINGELT b[m]);
  *         reconciliation data cr_v
  *         shared secret mu
  */
-void KEM1_Encapsulate(RINGELT u[m], uint64_t cr_v[muwords], uint64_t mu[muwords], RINGELT b[m]);
+void KEM1_Encapsulate(RINGELT u[m], uint64_t cr_v[recwords], uint64_t mu[muwords], RINGELT b[m]);
 
 /* Decapsulation routine.
  * input:  Bob's public key u in Fourier Domain
@@ -32,16 +32,24 @@ void KEM1_Encapsulate(RINGELT u[m], uint64_t cr_v[muwords], uint64_t mu[muwords]
  *         reconciliation data cr_v
  * output: shared secret mu
  */
-void KEM1_Decapsulate(uint64_t mu[muwords], RINGELT u[m], RINGELT s_1[m], uint64_t cr_v[muwords]);
+void KEM1_Decapsulate(uint64_t mu[muwords], RINGELT u[m], RINGELT s_1[m], uint64_t cr_v[recwords]);
 
 /* Sample secret. Only needed externally for benchmarking. */
 void sample_secret(RINGELT s[m]);
 
-/* Round and cross-round. Only needed externally for benchmarking. */
-void round_and_cross_round(uint64_t modular_rnd[muwords], uint64_t cross_rnd[muwords], const RINGELT v[m]);
+/* Produce helper data and reconcile to key. Only needed externally for benchmarking.
+ *   input: Bob's approximate shared secret v
+ *  output: reconciliation data helprec
+ *          shared secret key
+*/
+void help_rec(uint64_t key[muwords], uint64_t helprec[recwords], const RINGELT v[m]);
 
-/* Reconcile. Only needed externally for benchmarking. */
-void rec(uint64_t r[muwords], RINGELT w[m], uint64_t b[muwords]);
+/* Reconcile to key using helper data. Only needed externally for benchmarking. 
+ *  input: Alice's apprxomiate shared secret v
+ *         reconciliation data helprec
+ * output: shared secret key
+ */
+void rec(uint64_t key[muwords], const RINGELT v[m], const uint64_t helprec[recwords]);
 
 /*v = e0*b, multiply and add in the ring. All done in the FFT / CRT domain, so point-wise multiplication and addition*/
 #define POINTWISE_MUL(v, b, e0) \
