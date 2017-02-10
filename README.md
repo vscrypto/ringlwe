@@ -27,7 +27,7 @@ For each algorithm variant, we provide:
 * a benchmarking program in rlwe_benchmark.c, which compiles to benchmark_<m>_<q>_<sampling>
 * a check of test vectors in rlwe_testvec.c, which compiles to testvec_<m>_<q>_<sampling>
 
-| Algorithm (rlwe_<m>_<q>) | Reconciliation | Security   |    Public key size |
+| Algorithm (rlwe_*m*_*q*) | Reconciliation | Security   |    Public key size |
 | ------------------------ | -------------- | ---------- | ------------------ |
 | rlwe_512_12289           | NewHope-style  | 128+ bits  |    3584 bits       |
 | rlwe_1024_12289          | NewHope-style  | 256+ bits  |    7168 bits       |
