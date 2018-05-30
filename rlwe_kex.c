@@ -583,20 +583,31 @@ void rec(uint64_t r[muwords], const RINGELT w[m], const uint64_t b[recwords]) {
  * input:  none
  * output: private key s_1=s[n]...s[2*n-1] in Fourier Domain
  *         noise term s_0=s[0]...s[n-1] in Fourier Domain, not needed again
- *         public key b in Fourier Domain
+ *         public key b in Standard Domain or Fourier Domain depending on compile-time flag
  */	
 void KEM1_Generate(RINGELT s[2*m], RINGELT b[m]) {
 
 	sample_secret(s);	sample_secret(s+m);	
 	/*Fourier Transform secret keys*/
 	FFT_forward(s); FFT_forward(s+m);
+
+        /*Check if we need to Transform the basepoint*/
+        if (a_domain == 0) { 
+		FFT_forward(a); a_domain = 1; 
+	}
+
 	POINTWISE_MUL_ADD(b, a, s+m, s); //Combine with a to produce s_1*a+s_0 in the Fourier domain. Alice's public key.
+
+#ifdef TRANSMIT_IN_STANDARD_DOMAIN
+        /*Take Alice's public key out of the Fourier domain*/
+	FFT_backward(b);
+#endif
 
 }
 
 /* Encapsulation routine. Returns an element in R_q x R_2
- * input:  Alice's public key b in Fourier Domain
- * output: Bob's public key u in Fourier Domain
+ * input:  Alice's public key b in Standard Domain or Fourier Domain depending on compile-time flag
+ * output: Bob's public key u in Standard Domain or Fourier Domain depending on compile-time flag
  *         reconciliation data cr_v
  *         shared secret mu
  */
@@ -608,7 +619,20 @@ void KEM1_Encapsulate(RINGELT u[m], uint64_t cr_v[recwords], uint64_t mu[muwords
 	sample_secret(e);	sample_secret(e+m); sample_secret(e+2*m);	
 	/*Fourer Transform e0 and e1*/
 	FFT_forward(e); FFT_forward(e+m);
+
+        /*Check if we need to Transform the basepoint*/
+        if (a_domain == 0) { 
+		FFT_forward(a); a_domain = 1; 
+	}
+
 	POINTWISE_MUL_ADD(u, a, e, e+m); //Combine with a to produce e_0*a+e_1 in the Fourier domain. Bob's public key.
+
+#ifdef TRANSMIT_IN_STANDARD_DOMAIN
+        /*Take Bob's public key out of the Fourier domain*/
+	FFT_backward(u);
+        /*Transform Alice's public key into the Fourier domain*/
+        FFT_forward(b);
+#endif
 
 	POINTWISE_MUL(v, b, e); //Create v = e0*b
 	FFT_backward(v); //Undo the Fourier Transform
@@ -621,13 +645,18 @@ void KEM1_Encapsulate(RINGELT u[m], uint64_t cr_v[recwords], uint64_t mu[muwords
 }
 
 /* Decapsulation routine.
- * input:  Bob's public key u in Fourier Domain
+ * input:  Bob's public key u in Standard Domain or Fourier Domain depending on compile-time flag
  *         Alice's private key s_1 in Fourier Domain
  *         reconciliation data cr_v
  * output: shared secret mu
  */
 void KEM1_Decapsulate(uint64_t mu[muwords], RINGELT u[m], RINGELT s_1[m], uint64_t cr_v[recwords]) {
 	RINGELT w[m];
+
+#ifdef TRANSMIT_IN_STANDARD_DOMAIN
+        /*Transform Bob's public key into the Fourier domain*/
+        FFT_forward(u);
+#endif
 
 	POINTWISE_MUL(w, s_1, u); //Create w = s1*u
 	FFT_backward(w); //Undo the Fourier Transform
@@ -636,6 +665,3 @@ void KEM1_Decapsulate(uint64_t mu[muwords], RINGELT u[m], RINGELT s_1[m], uint64
 	rec(mu, w, cr_v);
 
 }
-
-
-

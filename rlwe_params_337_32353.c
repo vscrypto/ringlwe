@@ -31,11 +31,11 @@ const RINGELT q_1_4 = 8088, q_2_4 = 16176, q_3_4 = 24265;
 const RINGELT r0_l = 12132, r0_u = 28309, r1_l = 4043, r1_u = 20221;
 #endif
 
+int a_domain = 1; // Public parameter a is held in the FFT / CRT basis
 
 /* Public Parameter a. Each a parameter rejection sampled from non-overlapping
- * segments of the digits of e.
- * Note that this is held in the FFT / CRT basis.*/
-const RINGELT a[337] = {
+ * segments of the digits of e. */
+RINGELT a[337] = {
         0X1E2D, 0X241C, 0X3973, 0X368C, 0X0F20, 0X71FD, 0X2C9A, 0X3193, 
         0X000E, 0X14AF, 0X101F, 0X049C, 0X7505, 0X5D9B, 0X3329, 0X043C, 
         0X6041, 0X1A2C, 0X2AEF, 0X537E, 0X38EB, 0X3284, 0X08EA, 0X2120, 
@@ -80,4 +80,3 @@ const RINGELT a[337] = {
         0X3519, 0X3D1A, 0X1007, 0X60FB, 0X795E, 0X6179, 0X35E0, 0X59A7, 
         0X1876
         };
-

@@ -39,7 +39,10 @@ EXTERN const RINGELT q_1_4, q_2_4, q_3_4;
 EXTERN const RINGELT r0_u, r0_l, r1_u, r1_l;
 #endif
 
-/*Public parameter a. Note that this is held in the FFT / CRT basis.*/
-EXTERN const RINGELT a[512];
+/*Flag to determine whether Public parameter a is held in the FFT / CRT basis*/
+EXTERN int a_domain;
+
+/*Public parameter a*/
+EXTERN RINGELT a[512];
 
 #endif //_PARAMS_H

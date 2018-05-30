@@ -27,10 +27,10 @@ For each algorithm variant, we provide:
 * a benchmarking program in rlwe_benchmark.c, which compiles to benchmark_<m>_<q>_<sampling>
 * a check of test vectors in rlwe_testvec.c, which compiles to testvec_<m>_<q>_<sampling>
 
-| Algorithm (rlwe_*m*_*q*) | Reconciliation | Security   |    Public key size |
+| Algorithm (rlwe_<m>_<q>) | Reconciliation | Security   |    Public key size |
 | ------------------------ | -------------- | ---------- | ------------------ |
-| rlwe_512_12289           | NewHope-style  | 128+ bits  |    7168 bits       |
-| rlwe_1024_12289          | NewHope-style  | 256+ bits  |   14336 bits       |
+| rlwe_512_12289           | NewHope-style  | 128+ bits  |    3584 bits       |
+| rlwe_1024_12289          | NewHope-style  | 256+ bits  |    7168 bits       |
 | rlwe_256_15361           | Peikert-style  |  80 bits   |    3584 bits       |
 | rlwe_512_25601           | Peikert-style  | 128 bits   |    7680 bits       |
 | rlwe_1024_40961          | Peikert-style  | 256 bits   |   16384 bits       |
@@ -45,6 +45,7 @@ The algorithm for the Peikert-style power-of-two case is described in the paper 
 
 Substantial parts of this code are copied from the software published by Joppe W. Bos, Craig Costello, Michael Naehrig, and Douglas Stebila at https://github.com/dstebila/rlwekex, and described in their paper "Post-quantum key exchange for the TLS protocol from the ring learning with errors problem", available at http://eprint.iacr.org/2014/599.
 
+We have introduced an interoperability mode that transmits keys in the Standard domain to avoid Fourier domain incompatibilities.
 
 Cryptographically secure random number generation
 -------------------------------------------------
@@ -57,4 +58,3 @@ This is free and unencumbered software released into the public domain.
 Anyone is free to copy, modify, publish, use, compile, sell, or distribute this software, either in source code form or as a compiled binary, for any purpose, commercial or non-commercial, and by any means.
 
 See the file LICENSE for complete information.
-
